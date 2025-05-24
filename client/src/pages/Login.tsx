@@ -7,8 +7,6 @@ import Spinner from '../components/Spinner';
 const Login: React.FC = () => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-
-
     const login = useAuthStore((state) => state.login);
     const userInfo = useAuthStore((state) => state.userInfo);
     const loading = useAuthStore((state) => state.loading);
@@ -18,7 +16,6 @@ const Login: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-
         clearError();
     }, [email, password, clearError]);
 

@@ -10,11 +10,13 @@ const AdminDashboard: React.FC = () => {
     const [deleteStatus, setDeleteStatus] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchPosts();
+        if (posts.length === 0) {
+            fetchPosts();
+        }
         return () => {
             clearError();
         };
-    }, [fetchPosts, clearError]);
+    }, [posts.length]);
 
     const handleDelete = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this post?')) {

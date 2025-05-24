@@ -11,7 +11,7 @@ import type { BlogState } from "../types";
 
 // Define the shape of the blog store state
 
-export const useBlogStore = create<BlogState>((set) => ({
+export const useBlogStore = create<BlogState>((set, get) => ({
   posts: [],
   selectedPost: null,
   loading: false,
@@ -31,7 +31,18 @@ export const useBlogStore = create<BlogState>((set) => ({
   },
 
   fetchSinglePost: async (id: string) => {
-    set({ loading: true, error: null, selectedPost: null }); // Clear selected post before fetching
+    const { posts } = get(); // Get current posts from store
+    set({ loading: true, error: null, selectedPost: null });
+
+    // Try to find the post locally
+    const existingPost = posts?.find((post) => post._id === id);
+
+    if (existingPost) {
+      set({ selectedPost: existingPost, loading: false });
+      return;
+    }
+
+    // If not found, fetch from API
     try {
       const data = await getBlogPostById(id);
       set({ selectedPost: data, loading: false });
@@ -48,7 +59,7 @@ export const useBlogStore = create<BlogState>((set) => ({
     try {
       const newPost = await createBlogPost(postData);
       set((state) => ({
-        posts: [...state.posts, newPost], // Optimistically add new post to the list
+        posts: [...state.posts, newPost],
         loading: false,
       }));
     } catch (err: any) {

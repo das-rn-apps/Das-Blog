@@ -9,11 +9,13 @@ const Home: React.FC = () => {
     const { posts, loading, error, fetchPosts, clearError } = useBlogStore();
 
     useEffect(() => {
-        fetchPosts();
+        if (posts.length === 0) {
+            fetchPosts();
+        }
         return () => {
             clearError();
         };
-    }, [fetchPosts, clearError]);
+    }, [posts.length]);
 
     if (loading) {
         return (
@@ -29,11 +31,10 @@ const Home: React.FC = () => {
 
     return (
         <div className="container mx-auto p-4">
-            {/* <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Latest Blog Posts</h1> */}
             {posts.length === 0 ? (
                 <p className="text-center text-gray-600 text-lg">No blog posts found. Stay tuned for new content!</p>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"> {/* Changed from 3 to 4 for more compact view, adjust as needed */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {posts.map((post) => (
                         <BlogPostCard key={post._id} {...post} />
                     ))}

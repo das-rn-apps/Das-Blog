@@ -1,49 +1,45 @@
 // frontend/src/pages/Register.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore'; // Changed import
-import Spinner from '../components/Spinner'; // Re-use the Spinner component
+import { useAuthStore } from '../store/authStore';
+import Spinner from '../components/Spinner';
 
 const Register: React.FC = () => {
     const [username, setUsername] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
-    const [isAdmin, setIsAdmin] = useState<boolean>(false); // For simplicity, allow admin registration here
-    const [message, setMessage] = useState<string | null>(null); // For password mismatch etc.
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
+    const [message, setMessage] = useState<string | null>(null);
 
-    // Use useAuthStore to select relevant state and actions
     const register = useAuthStore((state) => state.register);
     const userInfo = useAuthStore((state) => state.userInfo);
     const loading = useAuthStore((state) => state.loading);
     const error = useAuthStore((state) => state.error);
-    const clearError = useAuthStore((state) => state.clearError); // New action to clear error
+    const clearError = useAuthStore((state) => state.clearError);
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Clear any previous error from the store or local messages when form fields change
         clearError();
         setMessage(null);
-    }, [username, email, password, confirmPassword, clearError]);
+    }, []);
 
     useEffect(() => {
-        // If user is already logged in, redirect to home
         if (userInfo) {
             navigate('/');
         }
-    }, [userInfo, navigate]);
+    }, [userInfo]);
 
     const submitHandler = async (e: React.FormEvent) => {
         e.preventDefault();
-        setMessage(null); // Clear previous messages (e.g., password mismatch)
+        setMessage(null);
 
         if (password !== confirmPassword) {
             setMessage('Passwords do not match');
             return;
         }
 
-        // Call the register function from AuthContext
         await register(username, email, password, isAdmin);
     };
 
