@@ -1,16 +1,18 @@
 // frontend/src/components/Navbar.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../store/authStore'; // Changed import
 
 const Navbar: React.FC = () => {
-    const { userInfo, logout } = useAuth();
+    const userInfo = useAuthStore((state) => state.userInfo);
+    const logout = useAuthStore((state) => state.logout);
+
     const navigate = useNavigate();
-    const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
-        setDropdownOpen(false); // Close dropdown after logout
+        setDropdownOpen(false);
         navigate('/login');
     };
 
@@ -18,7 +20,6 @@ const Navbar: React.FC = () => {
         setDropdownOpen(!dropdownOpen);
     };
 
-    // Get the first initial of the username for the circular avatar
     const getProfileInitial = (username: string) => {
         return username ? username.charAt(0).toUpperCase() : 'U';
     };
@@ -34,7 +35,7 @@ const Navbar: React.FC = () => {
                             {userInfo.isAdmin && (
                                 <Link to="/admin" className="hover:text-gray-300">Admin</Link>
                             )}
-                            <div className="relative"> {/* Container for profile initial and dropdown */}
+                            <div className="relative">
                                 <button
                                     onClick={toggleDropdown}
                                     className="flex items-center space-x-2 focus:outline-none"

@@ -1,50 +1,32 @@
 // frontend/src/pages/AdminDashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getBlogPosts, deleteBlogPost } from '../api/blogApi';
 import Spinner from '../components/Spinner';
-
-interface BlogPost {
-    _id: string;
-    title: string;
-    author: {
-        username: string;
-    };
-    publishedAt: string;
-}
+import { useBlogStore } from '../store/blogStore';
 
 const AdminDashboard: React.FC = () => {
-    const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [deleteStatus, setDeleteStatus] = useState<string | null>(null);
 
-    const fetchPosts = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await getBlogPosts();
-            setBlogPosts(data);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to fetch blog posts for admin');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { posts, loading, error, fetchPosts, deletePost, clearError } = useBlogStore();
+    const [deleteStatus, setDeleteStatus] = useState<string | null>(null);
 
     useEffect(() => {
         fetchPosts();
-    }, []);
+        return () => {
+            clearError();
+        };
+    }, [fetchPosts, clearError]);
 
     const handleDelete = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this post?')) {
             setDeleteStatus(null);
-            try {
-                await deleteBlogPost(id);
+            await deletePost(id);
+
+            const currentError = useBlogStore.getState().error;
+
+            if (!currentError) {
                 setDeleteStatus('Post deleted successfully!');
-                fetchPosts(); // Refresh the list
-            } catch (err: any) {
-                setDeleteStatus(err.response?.data?.message || 'Failed to delete post.');
+            } else {
+                setDeleteStatus(currentError || 'Failed to delete post.');
             }
         }
     };
@@ -57,7 +39,8 @@ const AdminDashboard: React.FC = () => {
         );
     }
 
-    if (error) {
+
+    if (error && !deleteStatus) {
         return <div className="text-red-500 text-center mt-8 text-xl">{error}</div>;
     }
 
@@ -79,7 +62,7 @@ const AdminDashboard: React.FC = () => {
                 </p>
             )}
 
-            {blogPosts.length === 0 ? (
+            {posts.length === 0 ? (
                 <p className="text-center text-gray-600 text-lg">No blog posts to manage.</p>
             ) : (
                 <div className="overflow-x-auto bg-white shadow-md rounded-lg">
@@ -101,7 +84,7 @@ const AdminDashboard: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {blogPosts.map((post) => (
+                            {posts.map((post) => (
                                 <tr key={post._id}>
                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                         <Link to={`/blog/${post._id}`} className="text-blue-600 hover:underline">

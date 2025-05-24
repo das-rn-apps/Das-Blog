@@ -1,18 +1,9 @@
 // frontend/src/components/BlogPostCard.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import type { BlogPostCardProps } from '../types';
 
-interface BlogPostCardProps {
-    _id: string;
-    title: string;
-    content: string;
-    imageUrl?: string;
-    author: {
-        username: string;
-    };
-    publishedAt: string;
-    tags?: string[];
-}
+
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ _id, title, content, imageUrl, author, publishedAt, tags }) => {
     const excerpt = content.length > 150 ? content.substring(0, 150) + '...' : content;

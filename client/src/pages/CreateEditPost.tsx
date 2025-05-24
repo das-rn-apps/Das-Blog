@@ -1,52 +1,64 @@
 // frontend/src/pages/CreateEditPost.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createBlogPost, getBlogPostById, updateBlogPost } from '../api/blogApi';
 import Spinner from '../components/Spinner';
+import { useBlogStore } from '../store/blogStore';
+import type { BlogPostFormState } from '../types';
 
-interface BlogPostFormState {
-    title: string;
-    content: string;
-    imageUrl: string;
-    tags: string; // Comma-separated string for input
-}
+
 
 const CreateEditPost: React.FC = () => {
-    const { id } = useParams<{ id?: string }>(); // 'id' will be present for editing
+    const { id } = useParams<{ id?: string }>();
     const navigate = useNavigate();
+
+    const { selectedPost, loading, error, fetchSinglePost, addPost, editPost, clearError, clearSelectedPost } = useBlogStore();
+
     const [formData, setFormData] = useState<BlogPostFormState>({
         title: '',
         content: '',
         imageUrl: '',
         tags: '',
     });
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
     const isEditMode = Boolean(id);
 
     useEffect(() => {
+
+        clearError();
+        setSuccess(null);
+
         if (isEditMode && id) {
-            setLoading(true);
-            const fetchPost = async () => {
-                try {
-                    const post = await getBlogPostById(id);
-                    setFormData({
-                        title: post.title,
-                        content: post.content,
-                        imageUrl: post.imageUrl || '',
-                        tags: post.tags ? post.tags.join(', ') : '',
-                    });
-                } catch (err: any) {
-                    setError(err.response?.data?.message || 'Failed to load post for editing');
-                } finally {
-                    setLoading(false);
-                }
-            };
-            fetchPost();
+
+            fetchSinglePost(id);
+        } else {
+
+            clearSelectedPost();
+            setFormData({
+                title: '',
+                content: '',
+                imageUrl: '',
+                tags: '',
+            });
         }
-    }, [id, isEditMode]);
+
+        return () => {
+            clearSelectedPost();
+            clearError();
+        };
+    }, [id, isEditMode, fetchSinglePost, clearError, clearSelectedPost]);
+
+    useEffect(() => {
+
+        if (isEditMode && selectedPost && selectedPost._id === id) {
+            setFormData({
+                title: selectedPost.title,
+                content: selectedPost.content,
+                imageUrl: selectedPost.imageUrl || '',
+                tags: selectedPost.tags ? selectedPost.tags.join(', ') : '',
+            });
+        }
+    }, [isEditMode, selectedPost, id]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -55,8 +67,7 @@ const CreateEditPost: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
+        clearError();
         setSuccess(null);
 
         const postData = {
@@ -68,27 +79,34 @@ const CreateEditPost: React.FC = () => {
 
         try {
             if (isEditMode && id) {
-                await updateBlogPost(id, postData);
+                await editPost(id, postData);
                 setSuccess('Blog post updated successfully!');
             } else {
-                await createBlogPost(postData);
+                await addPost(postData);
                 setSuccess('Blog post created successfully!');
-                setFormData({ title: '', content: '', imageUrl: '', tags: '' }); // Clear form
+                setFormData({ title: '', content: '', imageUrl: '', tags: '' });
             }
-            setTimeout(() => navigate('/admin'), 2000); // Redirect after 2 seconds
+            setTimeout(() => navigate('/admin'), 2000);
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Operation failed');
-        } finally {
-            setLoading(false);
+
         }
     };
 
-    if (loading && isEditMode) { // Only show spinner if loading an existing post
+
+    if (loading && isEditMode && !selectedPost) {
         return (
             <div className="flex justify-center items-center min-h-[calc(100vh-64px)]">
                 <Spinner />
             </div>
         );
+    }
+
+
+    if (isEditMode && !selectedPost && !loading && error) {
+        return <div className="text-red-500 text-center mt-8 text-xl">{error}</div>;
+    }
+    if (isEditMode && !selectedPost && !loading && !error && id) {
+        return <div className="text-gray-600 text-center mt-8 text-xl">Blog post not found for editing.</div>;
     }
 
     return (
@@ -99,7 +117,7 @@ const CreateEditPost: React.FC = () => {
 
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             {success && <p className="text-green-500 text-center mb-4">{success}</p>}
-            {loading && <Spinner />} {/* Show spinner on submission */}
+            {loading && <Spinner />}
 
             <form onSubmit={handleSubmit}>
                 <div className="mb-4">

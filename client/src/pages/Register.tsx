@@ -1,7 +1,7 @@
 // frontend/src/pages/Register.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../store/authStore'; // Changed import
 import Spinner from '../components/Spinner'; // Re-use the Spinner component
 
 const Register: React.FC = () => {
@@ -12,8 +12,20 @@ const Register: React.FC = () => {
     const [isAdmin, setIsAdmin] = useState<boolean>(false); // For simplicity, allow admin registration here
     const [message, setMessage] = useState<string | null>(null); // For password mismatch etc.
 
-    const { register, userInfo, loading, error } = useAuth();
+    // Use useAuthStore to select relevant state and actions
+    const register = useAuthStore((state) => state.register);
+    const userInfo = useAuthStore((state) => state.userInfo);
+    const loading = useAuthStore((state) => state.loading);
+    const error = useAuthStore((state) => state.error);
+    const clearError = useAuthStore((state) => state.clearError); // New action to clear error
+
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Clear any previous error from the store or local messages when form fields change
+        clearError();
+        setMessage(null);
+    }, [username, email, password, confirmPassword, clearError]);
 
     useEffect(() => {
         // If user is already logged in, redirect to home
@@ -24,7 +36,7 @@ const Register: React.FC = () => {
 
     const submitHandler = async (e: React.FormEvent) => {
         e.preventDefault();
-        setMessage(null); // Clear previous messages
+        setMessage(null); // Clear previous messages (e.g., password mismatch)
 
         if (password !== confirmPassword) {
             setMessage('Passwords do not match');

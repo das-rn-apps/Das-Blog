@@ -1,44 +1,19 @@
 // frontend/src/pages/Home.tsx
-import React, { useEffect, useState } from 'react';
-import { getBlogPosts } from '../api/blogApi';
+import React, { useEffect } from 'react';
 import BlogPostCard from '../components/BlogPostCard';
 import Spinner from '../components/Spinner';
 
-interface BlogPost {
-    _id: string;
-    title: string;
-    content: string;
-    imageUrl?: string;
-    author: {
-        _id: string;
-        username: string;
-        email: string;
-    };
-    publishedAt: string;
-    tags?: string[];
-    createdAt: string;
-    updatedAt: string;
-}
+import { useBlogStore } from '../store/blogStore';
 
 const Home: React.FC = () => {
-    const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    const { posts, loading, error, fetchPosts, clearError } = useBlogStore();
 
     useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                const data = await getBlogPosts();
-                setBlogPosts(data);
-            } catch (err: any) {
-                setError(err.response?.data?.message || 'Failed to fetch blog posts');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchPosts();
-    }, []);
+        return () => {
+            clearError();
+        };
+    }, [fetchPosts, clearError]);
 
     if (loading) {
         return (
@@ -54,12 +29,12 @@ const Home: React.FC = () => {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Latest Blog Posts</h1>
-            {blogPosts.length === 0 ? (
+            {/* <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Latest Blog Posts</h1> */}
+            {posts.length === 0 ? (
                 <p className="text-center text-gray-600 text-lg">No blog posts found. Stay tuned for new content!</p>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {blogPosts.map((post) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"> {/* Changed from 3 to 4 for more compact view, adjust as needed */}
+                    {posts.map((post) => (
                         <BlogPostCard key={post._id} {...post} />
                     ))}
                 </div>

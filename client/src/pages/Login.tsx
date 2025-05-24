@@ -1,18 +1,30 @@
 // frontend/src/pages/Login.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../store/authStore';
 import Spinner from '../components/Spinner';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const { login, userInfo, loading, error } = useAuth();
+
+
+    const login = useAuthStore((state) => state.login);
+    const userInfo = useAuthStore((state) => state.userInfo);
+    const loading = useAuthStore((state) => state.loading);
+    const error = useAuthStore((state) => state.error);
+    const clearError = useAuthStore((state) => state.clearError);
+
     const navigate = useNavigate();
 
     useEffect(() => {
+
+        clearError();
+    }, [email, password, clearError]);
+
+    useEffect(() => {
         if (userInfo) {
-            navigate('/'); // Redirect to home if already logged in
+            navigate('/');
         }
     }, [userInfo, navigate]);
 
@@ -22,7 +34,7 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center justify-center bg-gray-100 p-4">
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)] bg-gray-100 p-4">
             <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
                 <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Login</h1>
 
